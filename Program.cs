@@ -4,6 +4,12 @@ using StrideApex.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var portEnv = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrWhiteSpace(portEnv) && string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ASPNETCORE_URLS")))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{portEnv}");
+}
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -14,7 +20,7 @@ builder.Services.AddControllers()
 builder.Services.AddHttpClient();
 
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()
-    ?? ["http://localhost:3000", "http://127.0.0.1:3000"];
+    ?? ["https://strideapex.vercel.app", "http://localhost:3000", "http://127.0.0.1:3000"];
 
 builder.Services.AddCors(options =>
 {
@@ -40,6 +46,12 @@ var app = builder.Build();
 
 app.UseCors("StrideApexWeb");
 app.MapControllers();
+
+app.MapGet("/", () => Results.Ok(new
+{
+    status = "ok",
+    service = "StrideApex.Api"
+}));
 
 app.MapGet("/api/health", (IConfiguration config) =>
 {
